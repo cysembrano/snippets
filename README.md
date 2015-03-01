@@ -1,2 +1,2 @@
 # snippets
-Just some code snippets
+Just some cool code snippets
