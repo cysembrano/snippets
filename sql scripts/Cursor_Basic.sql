@@ -7,6 +7,7 @@ WHILE @@FETCH_STATUS = 0
 BEGIN   
 	IF NOT EXISTS (SELECT * FROM FEP_User_Right WHERE UserId = @currentuserid AND RightId = 233)
 	BEGIN
+		INSERT INTO FEP_USER_RIGHT VALUES(@currentuserid, 233, getdate())
 		PRINT('Adding Right 233 to User id (' + convert(nvarchar(50), @currentuserid) + ')')
 	END       
 FETCH NEXT FROM login_cursor INTO @currentuserid   
