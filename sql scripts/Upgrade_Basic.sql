@@ -52,6 +52,7 @@ BEGIN
 		,[Role]							NVARCHAR(50)	 NULL
 		,[Name]							NVARCHAR(100)    NULL
 		,[Email]						NVARCHAR(100)    NULL
+		,[TimeStamp]					DATETIME DEFAULT GetDate() NULL
 		
 		,CONSTRAINT [PK_FEP_cXML_PunchOutSetupRequest_Contact] PRIMARY KEY CLUSTERED([Id] ASC)
 		,CONSTRAINT [FK_FEP_cXML_PunchOutSetupRequest_Contact_FEP_cXML_PunchOutSetupRequest] FOREIGN KEY ([PunchOutSetupRequestId])
