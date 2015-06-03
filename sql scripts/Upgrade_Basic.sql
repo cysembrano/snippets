@@ -52,7 +52,8 @@ BEGIN
 		,[Role]							NVARCHAR(50)	 NULL
 		,[Name]							NVARCHAR(100)    NULL
 		,[Email]						NVARCHAR(100)    NULL
-		,[TimeStamp]					DATETIME DEFAULT GetDate() NULL
+		,[TimeStamp]					DATETIME 		 NOT NULL DEFAULT GetDate()
+		,[EmailProof]      				BIT              NOT NULL DEFAULT 1
 		
 		,CONSTRAINT [PK_FEP_cXML_PunchOutSetupRequest_Contact] PRIMARY KEY CLUSTERED([Id] ASC)
 		,CONSTRAINT [FK_FEP_cXML_PunchOutSetupRequest_Contact_FEP_cXML_PunchOutSetupRequest] FOREIGN KEY ([PunchOutSetupRequestId])
@@ -79,7 +80,7 @@ BEGIN
 		,[cXMLId]						UNIQUEIDENTIFIER NOT NULL
 		,[StatusCode]					NVARCHAR(50)	 NULL
 		,[StatusText]					NVARCHAR(250)    NULL
-		,[StartPageURL]					NVARCHAR(MAX)     NULL
+		,[StartPageURL]					NVARCHAR(MAX)    NULL
 		,[BuyerCookie]					NVARCHAR(250)    NULL
 		
 		,CONSTRAINT [PK_FEP_cXML_PunchOutSetupResponse] PRIMARY KEY CLUSTERED([Id] ASC)
