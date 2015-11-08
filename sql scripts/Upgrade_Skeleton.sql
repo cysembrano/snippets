@@ -34,6 +34,13 @@ BEGIN
 END; 
 GO
 
+--Drop Sproc Sample
+IF EXISTS (SELECT TOP 1 * FROM SYS.OBJECTS WHERE ([object_id] = OBJECT_ID('ProofEmail_GetEmailList')) AND ([type] in (N'P', N'PC')))
+BEGIN
+	PRINT 'Dropping Procedure [dbo].[ProofEmail_GetEmailList]';
+	DROP PROCEDURE [dbo].[ProofEmail_GetEmailList];
+END
+
 
 ----------------------------------------------------------------
 ----CREATE TABLE STYLE 1 SAMPLE

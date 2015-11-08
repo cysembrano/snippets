@@ -1,13 +1,72 @@
 --SelectSurvey_Extensions.sql
-SET NOCOUNT ON;
-GO
+BEGIN TRANSACTION
+SET QUOTED_IDENTIFIER ON
+SET ARITHABORT ON
+SET NUMERIC_ROUNDABORT OFF
+SET CONCAT_NULL_YIELDS_NULL ON
+SET ANSI_NULLS ON
+SET ANSI_PADDING ON
+SET ANSI_WARNINGS ON
+COMMIT
+
 
 ------------------------------------------------------------------------------
 ----DROP SCRIPT
 ----Comment this out WARNING THIS WILL DROP EVERYTHING!!!!!
 ------------------------------------------------------------------------------
+--Drop Foreign Keys
+IF EXISTS 
+(
+	SELECT TOP 1 * FROM SYS.FOREIGN_KEYS FK
+	INNER JOIN SYS.TABLES T ON T.[Object_ID] = FK.Parent_object_id
+	WHERE FK.[Name] = 'FK_sur_extn_data_group_sur_extn_contract' 
+	AND T.[Name] = 'sur_extn_data_group'
+)
+BEGIN
+	PRINT 'Dropping Foreign Key [FK_sur_extn_data_group_sur_extn_contract]';
+	ALTER TABLE sur_extn_data_group 
+	DROP CONSTRAINT FK_sur_extn_data_group_sur_extn_contract;
+END;
+GO
 
---Drop Tables 
+IF EXISTS 
+(
+	SELECT TOP 1 * FROM SYS.FOREIGN_KEYS FK
+	INNER JOIN SYS.TABLES T ON T.[Object_ID] = FK.Parent_object_id
+	WHERE FK.[Name] = 'FK_sur_extn_list_item_sur_extn_list' 
+	AND T.[Name] = 'sur_extn_list_item'
+)
+BEGIN
+	PRINT 'Dropping Foreign Key [FK_sur_extn_list_item_sur_extn_list]';
+	ALTER TABLE sur_extn_list_item 
+	DROP CONSTRAINT FK_sur_extn_list_item_sur_extn_list;
+END;
+GO
+
+
+--Drop Tables
+IF EXISTS (SELECT TOP 1 * FROM SYS.TABLES T WHERE (T.[name] = 'sur_extn_list_item'))
+BEGIN 
+	PRINT 'Dropping Table [sur_extn_list_item]';
+	DROP TABLE [sur_extn_list_item]
+END; 
+GO
+
+
+IF EXISTS (SELECT TOP 1 * FROM SYS.TABLES T WHERE (T.[name] = 'sur_extn_list'))
+BEGIN 
+	PRINT 'Dropping Table [sur_extn_list]';
+	DROP TABLE [sur_extn_list]
+END; 
+GO
+
+IF EXISTS (SELECT TOP 1 * FROM SYS.TABLES T WHERE (T.[name] = 'sur_extn_data_group'))
+BEGIN 
+	PRINT 'Dropping Table [sur_extn_data_group]';
+	DROP TABLE [sur_extn_data_group]
+END; 
+GO
+ 
 IF EXISTS (SELECT TOP 1 * FROM SYS.TABLES T WHERE (T.[name] = 'sur_extn_contract'))
 BEGIN 
 	PRINT 'Dropping Table [sur_extn_contract]';
@@ -16,36 +75,103 @@ END;
 GO
 
 
+
+
 ----------------------------------------------------------------
 ----CREATE TABLES
 ----------------------------------------------------------------
-IF NOT EXISTS (SELECT TOP 1 * FROM SYS.TABLES T	WHERE(T.[name] = 'ProofEmail'))
+BEGIN TRANSACTION
+GO
+IF NOT EXISTS (SELECT TOP 1 * FROM SYS.TABLES T	WHERE(T.[name] = 'sur_extn_contract'))
 BEGIN
-	PRINT 'Creating Table [ProofEmail]';
-	
-	CREATE TABLE [ProofEmail]
+	PRINT 'Creating Table [sur_extn_contract]'
+	CREATE TABLE [sur_extn_contract]
 	(
-		 [Id]							UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID()
-		,[TypeId]						INT 			 NOT NULL
-		,[StatusId]						INT 			 NOT NULL
-		
-		,[SalesOrderId]					NVARCHAR(50)	 NOT NULL
-		,[EmailProof]      				BIT              NOT NULL DEFAULT 1
-		,[EmailProof_FirstReminder]		BIT              NOT NULL DEFAULT 0
-		,[EmailProof_SecondReminder]	BIT              NOT NULL DEFAULT 0
-		,[Selling_Company]				VARCHAR(10)	 	 NOT NULL
-		,[CustomerAccount]				NVARCHAR(50)	 NOT NULL
-		,[CustomerEmail]				NVARCHAR(MAX)	 NOT NULL
-		,[Season]						NVARCHAR(50)	 NOT NULL
-		
-		,[WorkingDays]					AS (case when datepart(month,getdate())>(10) then (3) else (10) end)
-		
+		 [Id]							INT				 NOT NULL IDENTITY (1, 1)
+		,[ClientName]					NVARCHAR(50)	 NOT NULL
+		,[ContractName]					NVARCHAR(50)	 NOT NULL
+		,[Active]	      				BIT              NOT NULL DEFAULT 1
 		,[CreatedDate]					DATETIME		 NOT NULL DEFAULT GETDATE()
-		
-		,CONSTRAINT [PK_ProofEmail] PRIMARY KEY CLUSTERED([Id] ASC)
-		,CONSTRAINT [FK_ProofEmail_ProofEmail_Type] FOREIGN KEY ([TypeId])
-			REFERENCES [ProofEmail_Type]([Id])
-		,CONSTRAINT [FK_ProofEmail_ProofEmail_Status] FOREIGN KEY ([StatusId])
-			REFERENCES [ProofEmail_Status]([Id])
+		,[ModifiedDate]					DATETIME		 NULL
+		,CONSTRAINT [PK_sur_extn_contract] PRIMARY KEY CLUSTERED([Id] ASC)
 	);
+	PRINT 'Created Table [sur_extn_contract]'
 END
+GO
+ALTER TABLE [sur_extn_contract] SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+
+
+BEGIN TRANSACTION
+GO
+IF NOT EXISTS (SELECT TOP 1 * FROM SYS.TABLES T	WHERE(T.[name] = 'sur_extn_data_group'))
+BEGIN
+	PRINT 'Creating Table [sur_extn_data_group]'
+	CREATE TABLE [sur_extn_data_group]
+	(
+		 [Id]							INT				 NOT NULL IDENTITY (1, 1)
+		,[ContractId]					INT				 NOT NULL
+		,[GroupName]					NVARCHAR(50)	 NOT NULL
+		,[SortOrder]					INT				 NULL
+		,[Active]	      				BIT              NOT NULL DEFAULT 1
+		,[CreatedDate]					DATETIME		 NOT NULL DEFAULT GETDATE()
+		,[ModifiedDate]					DATETIME		 NULL
+		,CONSTRAINT [PK_sur_extn_data_group] PRIMARY KEY CLUSTERED([Id] ASC)
+		,CONSTRAINT [FK_sur_extn_data_group_sur_extn_contract] FOREIGN KEY ([ContractId])
+			REFERENCES [sur_extn_contract]([Id])
+	);
+	PRINT 'Created Table [sur_extn_data_group]'
+END
+GO
+ALTER TABLE [sur_extn_data_group] SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+
+
+BEGIN TRANSACTION
+GO
+IF NOT EXISTS (SELECT TOP 1 * FROM SYS.TABLES T	WHERE(T.[name] = 'sur_extn_list'))
+BEGIN
+	PRINT 'Creating Table [sur_extn_list]'
+	CREATE TABLE [sur_extn_list]
+	(
+		 [Id]							INT				 NOT NULL IDENTITY (1, 1)
+		,[ListName]						NVARCHAR(50)	 NOT NULL
+		,[Active]	      				BIT              NOT NULL DEFAULT 1
+		,[CreatedDate]					DATETIME		 NOT NULL DEFAULT GETDATE()
+		,[ModifiedDate]					DATETIME		 NULL
+		,CONSTRAINT [PK_sur_extn_list] PRIMARY KEY CLUSTERED([Id] ASC)
+	);
+	PRINT 'Created Table [sur_extn_list]'
+END
+GO
+ALTER TABLE [sur_extn_list] SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+
+
+BEGIN TRANSACTION
+GO
+IF NOT EXISTS (SELECT TOP 1 * FROM SYS.TABLES T	WHERE(T.[name] = 'sur_extn_list_item'))
+BEGIN
+	PRINT 'Creating Table [sur_extn_list_item]'
+	CREATE TABLE [sur_extn_list_item]
+	(
+		 [Id]							INT				 NOT NULL IDENTITY (1, 1)
+		,[ListId]						INT				 NOT NULL
+		,[ItemText]						NVARCHAR(100)	 NOT NULL
+		,[ItemValue]					NVARCHAR(100)	 NOT NULL
+		,[Active]	      				BIT              NOT NULL DEFAULT 1
+		,[CreatedDate]					DATETIME		 NOT NULL DEFAULT GETDATE()
+		,[ModifiedDate]					DATETIME		 NULL
+		,CONSTRAINT [PK_sur_extn_list_item] PRIMARY KEY CLUSTERED([Id] ASC)
+		,CONSTRAINT [FK_sur_extn_list_item_sur_extn_list] FOREIGN KEY ([ListId])
+			REFERENCES [sur_extn_list]([Id])
+	);
+	PRINT 'Created Table [sur_extn_list_item]'
+END
+GO
+ALTER TABLE [sur_extn_list_item] SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
